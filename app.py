@@ -58,6 +58,14 @@ st.markdown("""
         border-left: 4px solid #48dbfb; 
     }
 
+    /* Shining link effect */
+    .shining-link {
+        color: #48dbfb !important;
+        font-weight: bold;
+        text-decoration: none;
+        text-shadow: 0 0 5px rgba(72, 219, 251, 0.5);
+    }
+
     /* Clean UI: Hide menus */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -73,7 +81,7 @@ st.markdown('<p class="sub-title">Python Software Partner: Haiti to the World</p
 col1, col2 = st.columns([1.8, 1], gap="medium")
 
 with col1:
-    # VIDEO SECTION: Replace this URL with your generated 'talking' video link
+    # VIDEO SECTION
     VIDEO_URL = "https://raw.githubusercontent.com/Deslandes1/DeslandesGesner2026/main/Gesner%20Deslandes%202026.mp4"
     st.video(VIDEO_URL)
     
@@ -106,12 +114,14 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-    # Contact Card
+    # Contact Card with Website Link
     st.markdown('<div class="section-box">', unsafe_allow_html=True)
     st.write("👤 **Gesner Deslandes**")
     st.write("📞 **WA:** (509) 4738-5663")
     st.write("📧 deslandes78@gmail.com")
+    st.markdown('🌐 <a class="shining-link" href="https://globalinternetsitepy-abh7v6tnmskxxnuplrdcgk.streamlit.app/" target="_blank">GlobalInternet.py Official Site</a>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+    st.markdown("<br>", unsafe_allow_html=True)
     wa_link = "https://wa.me/50947385663?text=Interested%20in%20your%20software%20solutions"
     st.link_button("🚀 Start WhatsApp", wa_link, use_container_width=True)
