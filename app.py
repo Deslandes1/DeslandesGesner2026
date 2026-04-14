@@ -5,24 +5,24 @@ st.set_page_config(page_title="GLOBALINTERNET.PY", layout="wide")
 
 st.markdown("""
     <style>
-    /* Prevent any scrolling on the main page */
+    /* Prevent scrolling and ensure full-screen fit */
     html, body, [data-testid="stAppViewContainer"] {
         overflow: hidden;
         height: 100vh;
     }
     
-    /* Global scaling: reduce everything to 90% */
+    /* Main container scaling */
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 0rem !important;
-        max-width: 95% !important;
-        transform: scale(0.9);
+        max-width: 98% !important;
+        transform: scale(0.95);
         transform-origin: top center;
     }
 
-    /* Shrink the header */
+    /* Header styling */
     .main-title { 
-        font-size: 1.8rem !important; 
+        font-size: 2.2rem !important; 
         font-weight: bold; 
         color: #48dbfb; 
         text-align: center; 
@@ -31,35 +31,34 @@ st.markdown("""
     }
     
     .sub-title {
-        font-size: 0.9rem !important;
+        font-size: 1rem !important;
         text-align: center;
-        margin-bottom: 0.5rem;
+        margin-bottom: 1rem;
         color: #cccccc;
     }
 
-    /* Limit video size so it doesn't push content down */
+    /* ZOOMED VIDEO: Increased max-height and width */
     video {
-        max-height: 50vh !important;
-        width: auto !important;
-        margin: 0 auto;
-        display: block;
+        max-height: 75vh !important;
+        width: 100% !important;
+        border-radius: 15px;
+        box-shadow: 0px 4px 20px rgba(72, 219, 251, 0.3);
     }
 
-    /* Smaller text for the lists */
+    /* Text formatting */
     .small-text {
-        font-size: 0.85rem !important;
-        line-height: 1.2;
+        font-size: 0.95rem !important;
+        line-height: 1.4;
     }
 
     .section-box {
         background: #1e2130; 
-        padding: 8px; 
-        border-radius: 8px;
-        border-left: 3px solid #48dbfb; 
-        font-size: 0.8rem;
+        padding: 12px; 
+        border-radius: 10px;
+        border-left: 4px solid #48dbfb; 
     }
 
-    /* Hide Streamlit elements that take up space */
+    /* Clean UI: Hide menus */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -70,17 +69,18 @@ st.markdown("""
 st.markdown('<p class="main-title">🌐 GLOBALINTERNET.PY</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">Python Software Partner: Haiti to the World</p>', unsafe_allow_html=True)
 
-col1, col2 = st.columns([1.3, 1], gap="small")
+# Column 1 is wider to give the video more screen space
+col1, col2 = st.columns([1.8, 1], gap="medium")
 
 with col1:
-    # Video Section
+    # Zoomed Video Section
     VIDEO_URL = "https://raw.githubusercontent.com/Deslandes1/DeslandesGesner2026/main/Gesner%20Deslandes%202026.mp4"
     st.video(VIDEO_URL)
     
-    st.markdown('<p class="small-text">🔐 <b>Live Demos:</b> Use password <b>20082010</b></p>', unsafe_allow_html=True)
+    st.markdown('**🔐 Live Demos:** Use password **20082010**')
 
 with col2:
-    st.markdown("<h5 style='margin-bottom:0px;'>🏆 Software & Pricing</h5>", unsafe_allow_html=True)
+    st.markdown("### 🏆 Software & Pricing")
     st.markdown("""
     <div class="small-text">
     🚀 <b>Drone Commander:</b> $2,000<br>
@@ -91,7 +91,7 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<h5 style='margin-bottom:0px;'>💎 Why Us?</h5>", unsafe_allow_html=True)
+    st.markdown("### 💎 Why Us?")
     st.markdown("""
     <div class="small-text">
     ✅ Full Source Code Included<br>
