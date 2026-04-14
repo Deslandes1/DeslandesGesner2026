@@ -1,66 +1,111 @@
 import streamlit as st
 
-# Custom Scaling & Layout Fix
-st.set_page_config(page_title="GLOBALINTERNET.PY | Gesner Deslandes", layout="wide")
+# Set layout to wide
+st.set_page_config(page_title="GLOBALINTERNET.PY", layout="wide")
 
 st.markdown("""
     <style>
-    .stApp { background: #0e1117; color: white; }
-    .block-container { padding-top: 1rem !important; }
+    /* Prevent any scrolling on the main page */
+    html, body, [data-testid="stAppViewContainer"] {
+        overflow: hidden;
+        height: 100vh;
+    }
+    
+    /* Global scaling: reduce everything to 90% */
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0rem !important;
+        max-width: 95% !important;
+        transform: scale(0.9);
+        transform-origin: top center;
+    }
+
+    /* Shrink the header */
     .main-title { 
-        font-size: 2.5rem; font-weight: bold; color: #48dbfb; 
-        text-align: center; margin-bottom: 0px; text-transform: uppercase;
+        font-size: 1.8rem !important; 
+        font-weight: bold; 
+        color: #48dbfb; 
+        text-align: center; 
+        margin-bottom: 0px; 
+        text-transform: uppercase;
     }
+    
     .sub-title {
-        font-size: 1.2rem; text-align: center; margin-bottom: 1rem; color: #cccccc;
+        font-size: 0.9rem !important;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        color: #cccccc;
     }
+
+    /* Limit video size so it doesn't push content down */
+    video {
+        max-height: 50vh !important;
+        width: auto !important;
+        margin: 0 auto;
+        display: block;
+    }
+
+    /* Smaller text for the lists */
+    .small-text {
+        font-size: 0.85rem !important;
+        line-height: 1.2;
+    }
+
     .section-box {
-        background: #1e2130; padding: 15px; border-radius: 10px;
-        border-left: 5px solid #48dbfb; margin-bottom: 10px;
+        background: #1e2130; 
+        padding: 8px; 
+        border-radius: 8px;
+        border-left: 3px solid #48dbfb; 
+        font-size: 0.8rem;
     }
-    .price-tag { color: #48dbfb; font-weight: bold; }
+
+    /* Hide Streamlit elements that take up space */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     </style>
 """, unsafe_allow_html=True)
 
 # Main Header
 st.markdown('<p class="main-title">🌐 GLOBALINTERNET.PY</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Your Python Software Partner: Haiti to the World</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">Python Software Partner: Haiti to the World</p>', unsafe_allow_html=True)
 
-col1, col2 = st.columns([1.2, 1], gap="large")
+col1, col2 = st.columns([1.3, 1], gap="small")
 
 with col1:
-    st.markdown("### 📽️ Professional Presentation")
-    # Replace the URL below with your newly generated video link
+    # Video Section
     VIDEO_URL = "https://raw.githubusercontent.com/Deslandes1/DeslandesGesner2026/main/Gesner%20Deslandes%202026.mp4"
     st.video(VIDEO_URL)
     
-    st.markdown("---")
-    st.info("🔐 **Try Before You Buy:** Use password **20082010** to explore our Live Demos.")
+    st.markdown('<p class="small-text">🔐 <b>Live Demos:</b> Use password <b>20082010</b></p>', unsafe_allow_html=True)
 
 with col2:
-    st.markdown("### 🛠️ Tech Stack & Services")
-    with st.expander("View Full Services", expanded=True):
-        st.write("🔹 **Custom Python Development** – Tailor-made business logic.")
-        st.write("🔹 **AI & Machine Learning** – Intelligent bots & predictive models.")
-        st.write("🔹 **Enterprise Systems** – School, POS, & Accounting software.")
-        st.write("🔹 **Specialized Engineering** – Archives & Election systems.")
-
-    st.markdown("### 🏆 Ready-to-Deploy Solutions")
+    st.markdown("<h5 style='margin-bottom:0px;'>🏆 Software & Pricing</h5>", unsafe_allow_html=True)
     st.markdown("""
-    | Project | Investment |
-    | :--- | :--- |
-    | **Haitian Drone Commander** | <span class="price-tag">$2,000</span> |
-    | **Haiti Online Voting Software** | <span class="price-tag">$2,000</span> |
-    | **School Management System** | <span class="price-tag">$1,500</span> |
-    | **DSM-2026 Advanced Security** | <span class="price-tag">$299</span> |
+    <div class="small-text">
+    🚀 <b>Drone Commander:</b> $2,000<br>
+    🗳️ <b>Online Voting:</b> $2,000<br>
+    🏫 <b>School Management:</b> $1,500<br>
+    🛡️ <b>Security Radar:</b> $299<br>
+    🇵🇹 <b>Portuguese Course:</b> $299
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<h5 style='margin-bottom:0px;'>💎 Why Us?</h5>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="small-text">
+    ✅ Full Source Code Included<br>
+    ✅ Zero Subscriptions<br>
+    ✅ 1-Year Free Support
+    </div>
     """, unsafe_allow_html=True)
 
     # Contact Card
     st.markdown('<div class="section-box">', unsafe_allow_html=True)
-    st.markdown("**👤 Owner:** Gesner Deslandes")
-    st.markdown("**📞 WA:** (509) 4738-5663")
-    st.markdown("**📧 Email:** deslandes78@gmail.com")
+    st.write("👤 **Gesner Deslandes**")
+    st.write("📞 **WA:** (509) 4738-5663")
+    st.write("📧 deslandes78@gmail.com")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    wa_link = "https://wa.me/50947385663?text=I'm%20interested%20in%20your%20software%20solutions"
-    st.link_button("🚀 Get Started via WhatsApp", wa_link, use_container_width=True)
+    wa_link = "https://wa.me/50947385663?text=Interested%20in%20software"
+    st.link_button("🚀 Start WhatsApp", wa_link, use_container_width=True)
