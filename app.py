@@ -16,7 +16,7 @@ st.markdown("""
         padding-top: 1rem !important;
         padding-bottom: 0rem !important;
         max-width: 98% !important;
-        transform: scale(0.95);
+        transform: scale(0.92);
         transform-origin: top center;
     }
 
@@ -37,9 +37,9 @@ st.markdown("""
         color: #cccccc;
     }
 
-    /* ZOOMED VIDEO: Increased max-height and width */
+    /* ZOOMED VIDEO */
     video {
-        max-height: 75vh !important;
+        max-height: 70vh !important;
         width: 100% !important;
         border-radius: 15px;
         box-shadow: 0px 4px 20px rgba(72, 219, 251, 0.3);
@@ -47,13 +47,13 @@ st.markdown("""
 
     /* Text formatting */
     .small-text {
-        font-size: 0.95rem !important;
-        line-height: 1.4;
+        font-size: 0.85rem !important;
+        line-height: 1.3;
     }
 
     .section-box {
         background: #1e2130; 
-        padding: 12px; 
+        padding: 10px; 
         border-radius: 10px;
         border-left: 4px solid #48dbfb; 
     }
@@ -69,25 +69,31 @@ st.markdown("""
 st.markdown('<p class="main-title">🌐 GLOBALINTERNET.PY</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">Python Software Partner: Haiti to the World</p>', unsafe_allow_html=True)
 
-# Column 1 is wider to give the video more screen space
+# Column Layout
 col1, col2 = st.columns([1.8, 1], gap="medium")
 
 with col1:
-    # Zoomed Video Section
+    # VIDEO SECTION: Replace this URL with your generated 'talking' video link
     VIDEO_URL = "https://raw.githubusercontent.com/Deslandes1/DeslandesGesner2026/main/Gesner%20Deslandes%202026.mp4"
     st.video(VIDEO_URL)
     
-    st.markdown('**🔐 Live Demos:** Use password **20082010**')
+    st.markdown('**🔐 Live Demos Password:** `20082010`')
+    st.info("💡 Our Language Suites now feature high-fidelity native neural voices!")
 
 with col2:
-    st.markdown("### 🏆 Software & Pricing")
+    st.markdown("### 🏆 Software Demos")
+    
+    # Updated links section
     st.markdown("""
     <div class="small-text">
     🚀 <b>Drone Commander:</b> $2,000<br>
     🗳️ <b>Online Voting:</b> $2,000<br>
     🏫 <b>School Management:</b> $1,500<br>
-    🛡️ <b>Security Radar:</b> $299<br>
-    🇵🇹 <b>Portuguese Course:</b> $299
+    🛡️ <b>Security Radar:</b> $299<br><br>
+    🌐 <b>Language Suites ($299 ea):</b><br>
+    🇺🇸 <a href="https://let-s-learn-english-with-gesner-fasbf2hvwsfpkzz9s9oc4f.streamlit.app/" style="color:#48dbfb">Learn English Demo</a><br>
+    🇪🇸 <a href="https://let-s-learn-spanish-with-gesner-twe8na7wraihczvq2lhfkl.streamlit.app/" style="color:#48dbfb">Learn Spanish Demo</a><br>
+    🇵🇹 <a href="https://let-s-learn-portuguese-with-gesner-hqz5b8w8ebgvcrhbtuuxe5.streamlit.app/" style="color:#48dbfb">Learn Portuguese Demo</a>
     </div>
     """, unsafe_allow_html=True)
 
@@ -107,5 +113,5 @@ with col2:
     st.write("📧 deslandes78@gmail.com")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    wa_link = "https://wa.me/50947385663?text=Interested%20in%20software"
+    wa_link = "https://wa.me/50947385663?text=Interested%20in%20your%20software%20solutions"
     st.link_button("🚀 Start WhatsApp", wa_link, use_container_width=True)
