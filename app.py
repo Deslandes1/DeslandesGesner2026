@@ -30,11 +30,13 @@ st.markdown("""
         text-transform: uppercase;
     }
     
-    .sub-title {
-        font-size: 1rem !important;
+    /* UPDATED: Black color for better readiness */
+    .sub-title-black {
+        font-size: 1.1rem !important;
         text-align: center;
         margin-bottom: 1rem;
-        color: #cccccc;
+        color: #000000 !important;
+        font-weight: bold;
     }
 
     /* ZOOMED VIDEO */
@@ -75,7 +77,8 @@ st.markdown("""
 
 # Main Header
 st.markdown('<p class="main-title">🌐 GLOBALINTERNET.PY</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Python Software Partner: Haiti to the World</p>', unsafe_allow_html=True)
+# UPDATED: Using the black style class here
+st.markdown('<p class="sub-title-black">Python Software Partner: Haiti to the World</p>', unsafe_allow_html=True)
 
 # Column Layout
 col1, col2 = st.columns([1.8, 1], gap="medium")
