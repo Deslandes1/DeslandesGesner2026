@@ -1,35 +1,30 @@
 import streamlit as st
-import requests
-import time
 
-# --- GET YOUR KEY AT d-id.com ---
-API_KEY = st.secrets["DID_API_KEY"] # Recommended: Use Streamlit Secrets
-API_URL = "https://api.d-id.com"
+# --- CONFIGURATION ---
+st.set_page_config(page_title="GlobalInternet.py | AI Avatar", layout="wide")
 
-def generate_avatar_video(image_url, script):
-    # 1. Create the 'Talk'
-    payload = {
-        "script": {"type": "text", "input": script, "provider": {"type": "microsoft", "voice_id": "en-US-ChristopherNeural"}},
-        "source_url": image_url
-    }
-    headers = {"Authorization": f"Basic {API_KEY}", "Content-Type": "application/json"}
-    
-    response = requests.post(f"{API_URL}/talks", json=payload, headers=headers)
-    talk_id = response.json().get("id")
+# --- VIDEO ASSET ---
+# We convert your GitHub link to the raw URL so Streamlit can stream it
+GITHUB_VIDEO_URL = "https://raw.githubusercontent.com/Deslandes1/DeslandesGesner2026/main/Gesner%20Deslandes%202026.mp4"
 
-    # 2. Polling for completion
-    while True:
-        status_res = requests.get(f"{API_URL}/talks/{talk_id}", headers=headers)
-        status = status_res.json().get("status")
-        if status == "done":
-            return status_res.json().get("result_url")
-        elif status == "error":
-            return None
-        time.sleep(2)
+st.title("🐍 GlobalInternet.py AI Avatar")
+st.write("Professional Python & AI Solutions by Gesner Deslandes")
 
-# ... inside your button logic ...
-if st.button("🚀 Generate"):
-    # Note: image_url must be a public link for D-ID to access it
-    video_url = generate_avatar_video(my_public_image_url, script_text)
-    if video_url:
-        st.video(video_url)
+# --- UI LAYOUT ---
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.markdown("### 🎥 AI Talking Avatar Promo")
+    # Streamlit video player pulling directly from your GitHub repo
+    st.video(GITHUB_VIDEO_URL)
+
+with col2:
+    st.markdown("### 📋 Quick Info")
+    st.info("**Owner:** Gesner Deslandes")
+    st.success("**Location:** Haiti / Global Online")
+    st.write("📞 WhatsApp: (509) 4738-5663")
+    st.write("📧 Email: deslandes78@gmail.com")
+
+st.markdown("---")
+st.markdown("### 🚀 Get Started Today")
+st.write("Ready for the best professional software on the market? Connect with the leading Python builders.")
