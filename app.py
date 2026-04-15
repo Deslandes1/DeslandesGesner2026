@@ -84,8 +84,8 @@ st.markdown('<p class="sub-title-black">Python Software Partner: Haiti to the Wo
 col1, col2 = st.columns([1.8, 1], gap="medium")
 
 with col1:
-    # VIDEO SECTION
-    VIDEO_URL = "https://raw.githubusercontent.com/Deslandes1/DeslandesGesner2026/main/Gesner%20Deslandes%202026.mp4"
+    # VIDEO SECTION - UPDATED URL
+    VIDEO_URL = "https://raw.githubusercontent.com/Deslandes1/DeslandesGesner2026/main/Gesner%20Deslandes%20GlobalInternet.py.mp4"
     st.video(VIDEO_URL)
     
     st.markdown('**🔐 Live Demos Password:** `20082010`')
