@@ -43,6 +43,10 @@ with st.sidebar:
 uploaded_file = st.file_uploader("Choose a photo (face visible)", type=["jpg", "png", "jpeg"])
 text_to_say = st.text_area("What should the photo say?", height=100, placeholder="Type your message here...")
 
+# Store generated video path in session state so we can show it after generation
+if "video_path" not in st.session_state:
+    st.session_state.video_path = None
+
 if st.button("Generate Talking Video", use_container_width=True):
     if not uploaded_file or not text_to_say.strip():
         st.warning("Please upload a photo and enter text.")
@@ -78,7 +82,6 @@ if st.button("Generate Talking Video", use_container_width=True):
                     bg_img = bg_img.resize((target_w, img_array.shape[0]), Image.Resampling.LANCZOS)
                     bg_clip = ImageClip(np.array(bg_img), duration=duration)
                 else:
-                    # fallback to black if no custom image provided
                     bg_clip = ColorClip(size=(target_w, img_array.shape[0]), color=(0,0,0), duration=duration)
             
             # 5. Create photo clip (centered)
@@ -92,19 +95,29 @@ if st.button("Generate Talking Video", use_container_width=True):
             output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
             video.write_videofile(output_path, fps=24, codec="libx264", audio_codec="aac", verbose=False, logger=None)
             
-            # 8. Provide download link
-            with open(output_path, "rb") as f:
-                video_bytes = f.read()
-                b64 = base64.b64encode(video_bytes).decode()
-                st.success("Video generated successfully!")
-                st.markdown(f'<a href="data:video/mp4;base64,{b64}" download="talking_photo.mp4"><button style="background-color:#28a745; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">⬇️ Download Video</button></a>', unsafe_allow_html=True)
+            # Store path for later display
+            st.session_state.video_path = output_path
             
-            # Cleanup
-            for p in [img_path, audio_path, output_path]:
+            # Cleanup temporary files except the output video
+            for p in [img_path, audio_path]:
                 if os.path.exists(p):
                     os.unlink(p)
             if bg_image_path and os.path.exists(bg_image_path):
                 os.unlink(bg_image_path)
+            
+            st.success("Video created successfully! Preview below.")
+
+# Show the video if it exists
+if st.session_state.video_path and os.path.exists(st.session_state.video_path):
+    st.markdown("### 🎬 Preview")
+    with open(st.session_state.video_path, "rb") as f:
+        video_bytes = f.read()
+        b64 = base64.b64encode(video_bytes).decode()
+        # Use st.video with file path (more efficient)
+        st.video(st.session_state.video_path)
+        
+        # Download button
+        st.markdown(f'<a href="data:video/mp4;base64,{b64}" download="talking_photo.mp4"><button style="background-color:#28a745; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">⬇️ Download Video</button></a>', unsafe_allow_html=True)
 
 st.markdown("---")
 st.caption("Note: This version uses a static photo with audio. For realistic lip-sync, you would need an AI service like D-ID or HeyGen (requires API key).")
