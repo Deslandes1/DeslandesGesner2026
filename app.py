@@ -11,7 +11,7 @@ import edge_tts
 
 st.set_page_config(page_title="AI Media Studio – GlobalInternet.py", layout="centered")
 
-# Custom CSS to force most text to white, but dropdown options to black
+# Custom CSS to force most text to white, but dropdown options to black, and specific label to black
 st.markdown("""
 <style>
     /* Main background */
@@ -19,17 +19,21 @@ st.markdown("""
         background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
         color: white;
     }
-    /* All text elements except dropdown options */
+    /* All text elements except dropdown options and specific label */
     .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
     .stApp label, .stApp .stMarkdown, .stApp .stText, .stApp .stCaption, .stApp .stInfo,
     .stApp .stSuccess, .stApp .stWarning, .stApp .stError, .stApp .stRadio label,
-    .stApp .stSelectbox label, .stApp .stSlider label, .stApp .stFileUploader label,
+    .stApp .stSlider label, .stApp .stFileUploader label,
     .stApp .stTextArea label, .stApp .stButton button, .stApp .stAlert, .stApp .stException,
     .stApp .stCodeBlock, .stApp .stDataFrame, .stApp .stTable, .stApp .stTabs [role="tab"],
     .stApp .stTabs [role="tablist"] button, .stApp .stExpander, .stApp .stProgress > div,
     .stApp .stMetric label, .stApp .stMetric value, div, p, span, pre, code,
     .element-container, .stText p, .stText div, .stText span, .stText code {
         color: white !important;
+    }
+    /* Override for the specific label "Background music (optional)" */
+    .stSelectbox label {
+        color: black !important;
     }
     /* Radio button group */
     .stRadio [role="radiogroup"] label {
