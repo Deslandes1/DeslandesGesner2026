@@ -2,12 +2,10 @@ import streamlit as st
 import tempfile
 import os
 import base64
-from gtts import gTTS
-from PIL import Image, ImageDraw, ImageSequence
 import numpy as np
-import cv2
-from moviepy.editor import VideoClip, AudioFileClip, CompositeVideoClip, ImageClip
-from moviepy.video.fx import resize
+from gtts import gTTS
+from PIL import Image, ImageDraw
+from moviepy.editor import VideoClip, AudioFileClip, CompositeVideoClip, ImageClip, ColorClip, concatenate_videoclips
 
 st.set_page_config(page_title="AI Talking Photo – GlobalInternet.py", layout="centered")
 
@@ -64,19 +62,16 @@ if st.button("Generate Talking Video", use_container_width=True):
             audio = AudioFileClip(audio_path)
             duration = audio.duration
             
-            # 3. Create base image clip
+            # 3. Load and resize image
             img = Image.open(img_path).convert("RGBA")
-            # Resize to fit 720p
             target_w = 720
             ratio = target_w / img.width
             new_size = (target_w, int(img.height * ratio))
             img = img.resize(new_size, Image.Resampling.LANCZOS)
             img_array = np.array(img)
-            base_clip = ImageClip(img_array, duration=duration)
             
-            # 4. Background
+            # 4. Create background
             if bg_option == "Solid color":
-                # Convert hex to RGB
                 bg_rgb = tuple(int(bg_color.lstrip("#")[i:i+2], 16) for i in (0, 2, 4))
                 bg_clip = ColorClip(size=(target_w, img_array.shape[0]), color=bg_rgb, duration=duration)
             else:
@@ -85,54 +80,47 @@ if st.button("Generate Talking Video", use_container_width=True):
                     bg_img = bg_img.resize((target_w, img_array.shape[0]), Image.Resampling.LANCZOS)
                     bg_clip = ImageClip(np.array(bg_img), duration=duration)
                 else:
-                    # fallback to black
                     bg_clip = ColorClip(size=(target_w, img_array.shape[0]), color=(0,0,0), duration=duration)
             
-            # 5. Mouth animation (if enabled) – overlay a red oval that pulses
+            # 5. Create base image clip
+            base_clip = ImageClip(img_array, duration=duration).set_position("center")
+            
+            # 6. Mouth animation (if enabled)
             if mouth_animation:
-                # We'll create a mask with a moving mouth (simple open/close)
-                # Use moviepy's `VideoClip` with a custom frame function
                 def make_mouth_frame(t):
-                    # Create a transparent RGBA frame
+                    # Create transparent overlay
                     frame = np.zeros((img_array.shape[0], img_array.shape[1], 4), dtype=np.uint8)
-                    # Mouth region (approximate – adjust coordinates based on face detection? Too complex. Use fixed lower third)
-                    # For simplicity, draw a red ellipse at the bottom center of the face area
-                    # Estimate face region: assume face occupies top 60% of image
+                    # Mouth region (fixed position – lower center)
                     face_bottom = int(img_array.shape[0] * 0.65)
                     mouth_y = face_bottom + 30
                     mouth_width = int(img_array.shape[1] * 0.3)
                     mouth_height = int(mouth_width * 0.4)
-                    # Open/close amplitude: sin wave based on time
-                    amplitude = int(mouth_height * (0.5 + 0.5 * np.sin(2 * np.pi * 5 * t)))  # 5 Hz oscillation
+                    # Simulate open/close with sine wave (5 Hz)
+                    amplitude = int(mouth_height * (0.5 + 0.5 * np.sin(2 * np.pi * 5 * t)))
                     mouth_h = max(5, mouth_height + amplitude)
-                    # Draw filled ellipse
+                    # Draw ellipse
                     overlay = Image.new("RGBA", (img_array.shape[1], img_array.shape[0]), (0,0,0,0))
                     draw = ImageDraw.Draw(overlay)
                     left = (img_array.shape[1] - mouth_width) // 2
-                    top = mouth_y - mouth_h//2
+                    top = mouth_y - mouth_h // 2
                     right = left + mouth_width
                     bottom = top + mouth_h
                     draw.ellipse([left, top, right, bottom], fill=(255, 100, 100, 180))
-                    mouth_frame = np.array(overlay)
-                    # Blend with original frame? Actually we want overlay on top of image
-                    # We'll combine later in composite
-                    return mouth_frame
-                mouth_clip = VideoClip(make_mouth_frame, duration=duration)
-                # Position mouth overlay on the image
-                mouth_clip = mouth_clip.set_position(("center", "center"))
-                # Composite: background + image + mouth
-                video = CompositeVideoClip([bg_clip, base_clip.set_position("center"), mouth_clip], size=(target_w, img_array.shape[0]))
+                    return np.array(overlay)
+                
+                mouth_clip = VideoClip(make_mouth_frame, duration=duration).set_position("center")
+                video = CompositeVideoClip([bg_clip, base_clip, mouth_clip], size=(target_w, img_array.shape[0]))
             else:
-                video = CompositeVideoClip([bg_clip, base_clip.set_position("center")], size=(target_w, img_array.shape[0]))
+                video = CompositeVideoClip([bg_clip, base_clip], size=(target_w, img_array.shape[0]))
             
-            # 6. Add audio
+            # 7. Add audio
             video = video.set_audio(audio)
             
-            # 7. Write video file
+            # 8. Write video file
             output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
             video.write_videofile(output_path, fps=24, codec="libx264", audio_codec="aac", verbose=False, logger=None)
             
-            # 8. Display download link
+            # 9. Provide download link
             with open(output_path, "rb") as f:
                 video_bytes = f.read()
                 b64 = base64.b64encode(video_bytes).decode()
@@ -147,4 +135,4 @@ if st.button("Generate Talking Video", use_container_width=True):
                 os.unlink(bg_image_path)
 
 st.markdown("---")
-st.caption("Note: This tool uses a simple mouth animation overlay (not AI lip‑sync). For realistic talking head videos, consider using D‑ID, HeyGen, or Wav2Lip with a GPU.")
+st.caption("Note: This tool uses a simple mouth animation overlay (not AI lip-sync). For realistic talking head videos, consider using D-ID, HeyGen, or Wav2Lip with a GPU.")
