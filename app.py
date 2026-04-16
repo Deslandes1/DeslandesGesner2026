@@ -9,9 +9,95 @@ from PIL import Image
 from moviepy.editor import *
 import edge_tts
 
-st.set_page_config(page_title="AI Talking Photo – GlobalInternet.py", layout="centered")
+st.set_page_config(page_title="AI Media Studio – GlobalInternet.py", layout="centered")
 
-# Language settings (simplified for brevity, only English but you can add others)
+# Custom CSS to force all text to white
+st.markdown("""
+<style>
+    /* Main background */
+    .stApp {
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        color: white;
+    }
+    /* All text elements */
+    .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
+    .stApp label, .stApp .stMarkdown, .stApp .stText, .stApp .stCaption, .stApp .stInfo,
+    .stApp .stSuccess, .stApp .stWarning, .stApp .stError, .stApp .stRadio label,
+    .stApp .stSelectbox label, .stApp .stSlider label, .stApp .stFileUploader label,
+    .stApp .stTextArea label, .stApp .stButton button, .stApp .stAlert, .stApp .stException,
+    .stApp .stCodeBlock, .stApp .stDataFrame, .stApp .stTable, .stApp .stTabs [role="tab"],
+    .stApp .stTabs [role="tablist"] button, .stApp .stExpander, .stApp .stProgress > div,
+    .stApp .stMetric label, .stApp .stMetric value, div, p, span, pre, code,
+    .element-container, .stText p, .stText div, .stText span, .stText code {
+        color: white !important;
+    }
+    /* Radio button group */
+    .stRadio [role="radiogroup"] label {
+        background: rgba(255,255,255,0.15);
+        border-radius: 10px;
+        padding: 0.3rem;
+        margin: 0.2rem 0;
+        color: white !important;
+    }
+    /* Selectbox dropdown */
+    .stSelectbox div[data-baseweb="select"] {
+        background-color: #2d1b4e;
+        border: 1px solid #ffcc00;
+        border-radius: 10px;
+    }
+    .stSelectbox div[data-baseweb="select"] div {
+        color: white !important;
+    }
+    .stSelectbox svg {
+        fill: white;
+    }
+    /* Slider */
+    .stSlider label, .stSlider div[data-baseweb="slider"] span {
+        color: white !important;
+    }
+    /* File uploader */
+    .stFileUploader {
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 0.5rem;
+        border: 1px dashed #48dbfb;
+    }
+    /* Buttons */
+    .stButton button {
+        background-color: #ff6b35;
+        color: white !important;
+        border-radius: 30px;
+        font-weight: bold;
+    }
+    .stButton button:hover {
+        background-color: #feca57;
+        color: black !important;
+    }
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(135deg, #1a0b2e, #2d1b4e);
+    }
+    section[data-testid="stSidebar"] .stMarkdown,
+    section[data-testid="stSidebar"] .stText,
+    section[data-testid="stSidebar"] label {
+        color: white !important;
+    }
+    /* Expander */
+    .stExpander {
+        background: rgba(255,255,255,0.05);
+        border-radius: 15px;
+    }
+    /* Footer caption */
+    .footer-caption {
+        text-align: center;
+        color: #cccccc !important;
+        font-size: 0.8rem;
+        margin-top: 2rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Language settings (only English for simplicity, but you can add others)
 LANGUAGES = {
     "English": {
         "ui": {
@@ -39,6 +125,7 @@ LANGUAGES = {
             "no_music": "None",
             "music_volume": "Music volume",
             "upload_music": "Or upload your own music",
+            "caption": "Supports: Photo + Speech (male voice), Photo + Uploaded Audio, Video + Background Music."
         },
         "voice": "en-US-GuyNeural"
     }
@@ -112,14 +199,6 @@ with st.sidebar:
 
 ui = LANGUAGES[st.session_state.lang]["ui"]
 tts_voice = LANGUAGES[st.session_state.lang]["voice"]
-
-st.markdown(f"""
-<style>
-    .stApp {{ background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white; }}
-    h1, h2, h3 {{ color: #48dbfb; }}
-    .stButton button {{ background-color: #ff6b35; color: white; border-radius: 30px; }}
-</style>
-""", unsafe_allow_html=True)
 
 st.title(ui["title"])
 st.markdown(ui["subtitle"])
@@ -325,5 +404,4 @@ if st.session_state.video_path and os.path.exists(st.session_state.video_path):
         b64 = base64.b64encode(video_bytes).decode()
         st.markdown(f'<a href="data:video/mp4;base64,{b64}" download="output.mp4"><button style="background-color:#28a745; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">{ui["download_btn"]}</button></a>', unsafe_allow_html=True)
 
-st.markdown("---")
-st.caption("Supports: Photo + Speech (male voice), Photo + Uploaded Audio, Video + Background Music.")
+st.markdown(f'<div class="footer-caption">{ui["caption"]}</div>', unsafe_allow_html=True)
