@@ -5,7 +5,7 @@ import base64
 import numpy as np
 import asyncio
 from PIL import Image, ImageDraw
-from moviepy.editor import VideoClip, AudioFileClip, CompositeVideoClip, ImageClip, ColorClip
+from moviepy.editor import ImageClip, AudioFileClip, ColorClip, CompositeVideoClip, VideoClip
 import edge_tts
 
 st.set_page_config(page_title="AI Talking Photo – GlobalInternet.py", layout="centered")
@@ -18,7 +18,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🎭 AI Talking Photo – with Lip Sync & Male Voice")
+st.title("🎭 AI Talking Photo")
 st.markdown("Upload a photo, type a message, and the photo will speak with moving lips and a male voice.")
 
 # Initialize variables
@@ -43,8 +43,9 @@ with st.sidebar:
 
 uploaded_file = st.file_uploader("Choose a photo (face visible)", type=["jpg", "png", "jpeg"])
 text_to_say = st.text_area("What should the photo say?", height=100, placeholder="Type your message here...")
-lip_sync_intensity = st.slider("Lip movement intensity", 0.0, 1.0, 0.7, 0.05, help="Higher = more mouth opening")
+lip_intensity = st.slider("Lip movement intensity", 0.0, 1.0, 0.7, 0.05, help="Higher = more mouth opening")
 
+# Store generated video path in session state
 if "video_path" not in st.session_state:
     st.session_state.video_path = None
 
@@ -90,65 +91,62 @@ if st.button("Generate Talking Video", use_container_width=True):
                 else:
                     bg_clip = ColorClip(size=(target_w, img_array.shape[0]), color=(0,0,0), duration=duration)
             
-            # 5. Prepare audio volume envelope for lip sync
-            # We'll sample audio amplitude at frame times
-            audio_array = audio.to_soundarray(fps=fps)  # shape (n_frames, 2)
-            # Convert to mono and get absolute amplitude
+            # 5. Get audio volume envelope for lip sync
+            audio_array = audio.to_soundarray(fps=fps)  # shape (n_frames, channels)
             if audio_array.ndim > 1:
                 volume = np.mean(np.abs(audio_array), axis=1)
             else:
                 volume = np.abs(audio_array)
-            # Normalize volume between 0 and 1
             if volume.max() > 0:
                 volume = volume / volume.max()
-            volume = np.clip(volume * lip_sync_intensity, 0, 1)
+            volume = np.clip(volume * lip_intensity, 0, 1)
             
-            # 6. Define mouth region (lower face area)
-            mouth_y = int(img_array.shape[0] * 0.65)
-            mouth_width = int(img_array.shape[1] * 0.3)
-            max_mouth_height = int(mouth_width * 0.4)
+            # 6. Mouth parameters
+            mouth_y = int(img_array.shape[0] * 0.65)          # vertical position (lower face)
+            mouth_width = int(img_array.shape[1] * 0.3)       # 30% of image width
+            max_mouth_height = int(mouth_width * 0.4)         # proportional height
             min_mouth_height = 3
             
-            # 7. Create frame-by-frame mouth overlay
+            # 7. Create mouth overlay frame by frame
             def make_frame(t):
                 frame_idx = int(t * fps)
                 if frame_idx >= len(volume):
                     frame_idx = len(volume) - 1
                 amp = volume[frame_idx]
                 mouth_h = int(min_mouth_height + (max_mouth_height - min_mouth_height) * amp)
-                # Create a transparent overlay
                 overlay = Image.new("RGBA", (img_array.shape[1], img_array.shape[0]), (0,0,0,0))
                 draw = ImageDraw.Draw(overlay)
                 left = (img_array.shape[1] - mouth_width) // 2
                 top = mouth_y - mouth_h // 2
                 right = left + mouth_width
                 bottom = top + mouth_h
-                # Draw an ellipse as mouth (reddish)
                 draw.ellipse([left, top, right, bottom], fill=(255, 100, 100, 180))
                 return np.array(overlay)
             
             mouth_clip = VideoClip(make_frame, duration=duration).set_position("center")
             
-            # 8. Composite: background + photo + mouth
+            # 8. Create photo clip and composite
             photo_clip = ImageClip(img_array, duration=duration).set_position("center")
             video = CompositeVideoClip([bg_clip, photo_clip, mouth_clip], size=(target_w, img_array.shape[0]))
             video = video.set_audio(audio)
             
-            # 9. Write video
+            # 9. Write video file
             output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
             video.write_videofile(output_path, fps=fps, codec="libx264", audio_codec="aac", verbose=False, logger=None)
             
+            # Store path for later display
             st.session_state.video_path = output_path
             
-            # Cleanup temporary files except output
+            # Cleanup temporary files except the output video
             for p in [img_path, audio_path]:
                 if os.path.exists(p):
                     os.unlink(p)
             if bg_image_path and os.path.exists(bg_image_path):
                 os.unlink(bg_image_path)
             
-            st.success("Video ready! Watch preview below.")
+            st.success("Video created successfully! Preview below.")
 
+# Show the video if it exists
 if st.session_state.video_path and os.path.exists(st.session_state.video_path):
     st.markdown("### 🎬 Preview")
     st.video(st.session_state.video_path)
