@@ -20,6 +20,9 @@ st.markdown("""
 st.title("🎭 AI Talking Photo")
 st.markdown("Upload a photo, type a message, and the photo will 'speak' (audio + static image). No API keys required.")
 
+# Initialize variables
+bg_image_path = None
+
 with st.sidebar:
     st.image("https://flagcdn.com/w320/ht.png", width=80)
     st.markdown("### GlobalInternet.py")
@@ -32,7 +35,6 @@ with st.sidebar:
         bg_color = st.color_picker("Pick a color", "#1a1a2e")
     else:
         bg_image_file = st.file_uploader("Upload background image", type=["jpg", "png", "jpeg"])
-        bg_image_path = None
         if bg_image_file:
             bg_image_path = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
             with open(bg_image_path, "wb") as f:
@@ -76,6 +78,7 @@ if st.button("Generate Talking Video", use_container_width=True):
                     bg_img = bg_img.resize((target_w, img_array.shape[0]), Image.Resampling.LANCZOS)
                     bg_clip = ImageClip(np.array(bg_img), duration=duration)
                 else:
+                    # fallback to black if no custom image provided
                     bg_clip = ColorClip(size=(target_w, img_array.shape[0]), color=(0,0,0), duration=duration)
             
             # 5. Create photo clip (centered)
