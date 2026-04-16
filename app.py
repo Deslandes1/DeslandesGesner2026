@@ -11,7 +11,6 @@ import edge_tts
 
 st.set_page_config(page_title="AI Media Studio – GlobalInternet.py", layout="centered")
 
-# Custom CSS
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white; }
@@ -26,7 +25,6 @@ st.markdown("""
     .element-container, .stText p, .stText div, .stText span, .stText code {
         color: white !important;
     }
-    /* Override for the specific label "Background music (optional)" */
     .stSelectbox label {
         color: black !important;
     }
@@ -204,7 +202,6 @@ tts_voice = LANGUAGES[st.session_state.lang]["voice"]
 st.title(ui["title"])
 st.markdown(ui["subtitle"])
 
-# Mode selection (4 modes)
 mode = st.radio(ui["mode_label"], [
     ui["mode_photo_speech"],
     ui["mode_photo_audio"],
@@ -214,7 +211,6 @@ mode = st.radio(ui["mode_label"], [
 
 bg_image_path = None
 
-# Background settings only for photo modes (all except video)
 if mode != ui["mode_video_music"]:
     with st.sidebar:
         bg_option = st.radio(ui["bg_label"], [ui["bg_solid"], ui["bg_custom"]])
@@ -227,27 +223,17 @@ if mode != ui["mode_video_music"]:
                 with open(bg_image_path, "wb") as f:
                     f.write(bg_image_file.getbuffer())
 
-# Common music selection (used only in modes that need background music)
-# For photo+music mode, the selected music will be the main audio.
 selected_music = "None"
 music_volume = 0.5
 uploaded_music = None
 
-if mode in [ui["mode_photo_music"], ui["mode_video_music"]]:
-    music_options = list(MUSIC_TRACKS.keys())
-    selected_music = st.selectbox(ui["music_label"], music_options, index=0)
-    if selected_music != "None":
-        music_volume = st.slider(ui["music_volume"], 0.0, 1.0, 0.5, 0.05)
-    uploaded_music = st.file_uploader(ui["upload_music"], type=["mp3", "wav"])
-else:
-    # For other modes, we still allow optional background music
-    music_options = list(MUSIC_TRACKS.keys())
-    selected_music = st.selectbox(ui["music_label"], music_options, index=0)
-    if selected_music != "None":
-        music_volume = st.slider(ui["music_volume"], 0.0, 1.0, 0.5, 0.05)
-    uploaded_music = st.file_uploader(ui["upload_music"], type=["mp3", "wav"])
+# Always show music selector (optional background for all modes)
+music_options = list(MUSIC_TRACKS.keys())
+selected_music = st.selectbox(ui["music_label"], music_options, index=0)
+if selected_music != "None":
+    music_volume = st.slider(ui["music_volume"], 0.0, 1.0, 0.5, 0.05)
+uploaded_music = st.file_uploader(ui["upload_music"], type=["mp3", "wav"])
 
-# Mode-specific inputs
 photo_file = None
 text_to_say = ""
 audio_file = None
@@ -261,7 +247,7 @@ elif mode == ui["mode_photo_audio"]:
     audio_file = st.file_uploader(ui["audio_upload"], type=["mp3", "wav"])
 elif mode == ui["mode_photo_music"]:
     photo_file = st.file_uploader(ui["photo_upload"], type=["jpg", "png", "jpeg"])
-else:  # video mode
+else:
     video_file = st.file_uploader(ui["video_upload"], type=["mp4"])
 
 if "video_path" not in st.session_state:
@@ -270,6 +256,18 @@ if "video_path" not in st.session_state:
 async def generate_speech(text, output_path, voice):
     communicate = edge_tts.Communicate(text, voice)
     await communicate.save(output_path)
+
+def load_audio_file(file_path):
+    """Attempt to load an audio file and return an AudioFileClip, or None if invalid."""
+    try:
+        clip = AudioFileClip(file_path)
+        # Check if duration is valid (not zero)
+        if clip.duration <= 0:
+            raise ValueError("Audio duration is zero or invalid")
+        return clip
+    except Exception as e:
+        st.error(f"Audio file is invalid or corrupted: {e}")
+        return None
 
 if st.button(ui["generate_btn"], use_container_width=True):
     # Validation
@@ -290,7 +288,6 @@ if st.button(ui["generate_btn"], use_container_width=True):
         try:
             if mode != ui["mode_video_music"]:
                 # --- Photo modes ---
-                # Save uploaded photo
                 img_path = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
                 with open(img_path, "wb") as f:
                     f.write(photo_file.getbuffer())
@@ -318,18 +315,21 @@ if st.button(ui["generate_btn"], use_container_width=True):
                 if mode == ui["mode_photo_speech"]:
                     audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                     asyncio.run(generate_speech(text_to_say, audio_path, tts_voice))
-                    main_audio = AudioFileClip(audio_path)
+                    main_audio = load_audio_file(audio_path)
+                    if main_audio is None:
+                        st.stop()
                     duration = main_audio.duration
                     main_audio_file = audio_path
                 elif mode == ui["mode_photo_audio"]:
                     audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                     with open(audio_path, "wb") as f:
                         f.write(audio_file.getbuffer())
-                    main_audio = AudioFileClip(audio_path)
+                    main_audio = load_audio_file(audio_path)
+                    if main_audio is None:
+                        st.stop()
                     duration = main_audio.duration
                     main_audio_file = audio_path
                 else:  # mode_photo_music
-                    # Use selected music or uploaded music as main audio
                     if uploaded_music:
                         audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                         with open(audio_path, "wb") as f:
@@ -338,12 +338,18 @@ if st.button(ui["generate_btn"], use_container_width=True):
                         music_url = MUSIC_TRACKS[selected_music]
                         audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                         resp = requests.get(music_url)
+                        if resp.status_code != 200:
+                            st.error("Failed to download the selected music track. Please try another one or upload your own.")
+                            st.stop()
                         with open(audio_path, "wb") as f:
                             f.write(resp.content)
                     else:
                         st.error("Please select or upload a music track.")
                         st.stop()
-                    main_audio = AudioFileClip(audio_path)
+                    # Validate the downloaded/uploaded music file
+                    main_audio = load_audio_file(audio_path)
+                    if main_audio is None:
+                        st.stop()
                     duration = main_audio.duration
                     main_audio_file = audio_path
 
@@ -352,35 +358,36 @@ if st.button(ui["generate_btn"], use_container_width=True):
                 video = CompositeVideoClip([bg_clip, photo_clip], size=(target_w, target_h))
                 video = video.set_audio(main_audio)
 
-                # For modes that allow additional background music (photo_speech and photo_audio)
-                # but for photo_music, we already set main_audio as the music, so no extra mixing.
-                if mode != ui["mode_photo_music"]:
-                    # Add optional background music
-                    if (selected_music != "None" or uploaded_music) and mode != ui["mode_photo_music"]:
-                        if uploaded_music:
-                            music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
-                            with open(music_path, "wb") as f:
-                                f.write(uploaded_music.getbuffer())
-                        else:
-                            music_url = MUSIC_TRACKS[selected_music]
-                            music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
-                            resp = requests.get(music_url)
-                            with open(music_path, "wb") as f:
-                                f.write(resp.content)
-                        music_clip = AudioFileClip(music_path)
-                        if music_clip.duration < duration:
-                            n_loops = int(duration / music_clip.duration) + 1
-                            music_clip = concatenate_audioclips([music_clip] * n_loops)
-                        music_clip = music_clip.subclip(0, duration).volumex(music_volume)
-                        final_audio = CompositeAudioClip([main_audio, music_clip])
+                # Add optional background music only for non‑music modes (to avoid double music)
+                if mode != ui["mode_photo_music"] and (selected_music != "None" or uploaded_music):
+                    if uploaded_music:
+                        music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+                        with open(music_path, "wb") as f:
+                            f.write(uploaded_music.getbuffer())
+                    else:
+                        music_url = MUSIC_TRACKS[selected_music]
+                        music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+                        resp = requests.get(music_url)
+                        if resp.status_code != 200:
+                            st.error("Failed to download background music.")
+                            st.stop()
+                        with open(music_path, "wb") as f:
+                            f.write(resp.content)
+                    bg_music = load_audio_file(music_path)
+                    if bg_music is None:
+                        st.warning("Background music is invalid, skipping.")
+                    else:
+                        if bg_music.duration < duration:
+                            n_loops = int(duration / bg_music.duration) + 1
+                            bg_music = concatenate_audioclips([bg_music] * n_loops)
+                        bg_music = bg_music.subclip(0, duration).volumex(music_volume)
+                        final_audio = CompositeAudioClip([main_audio, bg_music])
                         video = video.set_audio(final_audio)
                         os.unlink(music_path)
 
-                # Write video
                 output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
                 video.write_videofile(output_path, fps=24, codec="libx264", audio_codec="aac", verbose=False, logger=None)
 
-                # Cleanup
                 os.unlink(img_path)
                 os.unlink(main_audio_file)
                 if bg_image_path and os.path.exists(bg_image_path):
@@ -394,7 +401,6 @@ if st.button(ui["generate_btn"], use_container_width=True):
                 video_clip = VideoFileClip(video_path_input)
                 duration = video_clip.duration
 
-                # Add background music
                 if selected_music != "None" or uploaded_music:
                     if uploaded_music:
                         music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
@@ -404,19 +410,25 @@ if st.button(ui["generate_btn"], use_container_width=True):
                         music_url = MUSIC_TRACKS[selected_music]
                         music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                         resp = requests.get(music_url)
+                        if resp.status_code != 200:
+                            st.error("Failed to download background music.")
+                            st.stop()
                         with open(music_path, "wb") as f:
                             f.write(resp.content)
-                    music_clip = AudioFileClip(music_path)
-                    if music_clip.duration < duration:
-                        n_loops = int(duration / music_clip.duration) + 1
-                        music_clip = concatenate_audioclips([music_clip] * n_loops)
-                    music_clip = music_clip.subclip(0, duration).volumex(music_volume)
-                    orig_audio = video_clip.audio
-                    if orig_audio:
-                        final_audio = CompositeAudioClip([orig_audio, music_clip])
+                    music_clip = load_audio_file(music_path)
+                    if music_clip is None:
+                        st.warning("Background music is invalid, skipping.")
                     else:
-                        final_audio = music_clip
-                    video_clip = video_clip.set_audio(final_audio)
+                        if music_clip.duration < duration:
+                            n_loops = int(duration / music_clip.duration) + 1
+                            music_clip = concatenate_audioclips([music_clip] * n_loops)
+                        music_clip = music_clip.subclip(0, duration).volumex(music_volume)
+                        orig_audio = video_clip.audio
+                        if orig_audio:
+                            final_audio = CompositeAudioClip([orig_audio, music_clip])
+                        else:
+                            final_audio = music_clip
+                        video_clip = video_clip.set_audio(final_audio)
                     os.unlink(music_path)
 
                 output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
