@@ -4,3 +4,5 @@ Pillow
 numpy
 opencv-python-headless
 moviepy
+edge-tts
+nest-asyncio
