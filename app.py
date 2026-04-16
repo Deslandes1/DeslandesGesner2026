@@ -1,130 +1,150 @@
 import streamlit as st
+import tempfile
+import os
+import base64
+from gtts import gTTS
+from PIL import Image, ImageDraw, ImageSequence
+import numpy as np
+import cv2
+from moviepy.editor import VideoClip, AudioFileClip, CompositeVideoClip, ImageClip
+from moviepy.video.fx import resize
 
-# Set layout to wide
-st.set_page_config(page_title="GLOBALINTERNET.PY", layout="wide")
+st.set_page_config(page_title="AI Talking Photo – GlobalInternet.py", layout="centered")
 
 st.markdown("""
-    <style>
-    /* Prevent scrolling and ensure full-screen fit */
-    html, body, [data-testid="stAppViewContainer"] {
-        overflow: hidden;
-        height: 100vh;
-    }
-    
-    /* Main container scaling */
-    .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-        max-width: 98% !important;
-        transform: scale(0.92);
-        transform-origin: top center;
-    }
-
-    /* Header styling */
-    .main-title { 
-        font-size: 2.2rem !important; 
-        font-weight: bold; 
-        color: #48dbfb; 
-        text-align: center; 
-        margin-bottom: 0px; 
-        text-transform: uppercase;
-    }
-    
-    /* UPDATED: Black color for better readiness */
-    .sub-title-black {
-        font-size: 1.1rem !important;
-        text-align: center;
-        margin-bottom: 1rem;
-        color: #000000 !important;
-        font-weight: bold;
-    }
-
-    /* ZOOMED VIDEO */
-    video {
-        max-height: 70vh !important;
-        width: 100% !important;
-        border-radius: 15px;
-        box-shadow: 0px 4px 20px rgba(72, 219, 251, 0.3);
-    }
-
-    /* Text formatting */
-    .small-text {
-        font-size: 0.85rem !important;
-        line-height: 1.3;
-    }
-
-    .section-box {
-        background: #1e2130; 
-        padding: 10px; 
-        border-radius: 10px;
-        border-left: 4px solid #48dbfb; 
-    }
-
-    /* Shining link effect */
-    .shining-link {
-        color: #48dbfb !important;
-        font-weight: bold;
-        text-decoration: none;
-        text-shadow: 0 0 5px rgba(72, 219, 251, 0.5);
-    }
-
-    /* Clean UI: Hide menus */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    </style>
+<style>
+    .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white; }
+    h1, h2, h3 { color: #48dbfb; }
+    .stButton button { background-color: #ff6b35; color: white; border-radius: 30px; }
+    .stAlert { background-color: #1e2130; color: white; }
+</style>
 """, unsafe_allow_html=True)
 
-# Main Header
-st.markdown('<p class="main-title">🌐 GLOBALINTERNET.PY</p>', unsafe_allow_html=True)
-# UPDATED: Using the black style class here
-st.markdown('<p class="sub-title-black">Python Software Partner: Haiti to the World</p>', unsafe_allow_html=True)
+st.title("🎭 AI Talking Photo")
+st.markdown("Upload a photo, type your message, and watch it speak – no API keys required.")
 
-# Column Layout
-col1, col2 = st.columns([1.8, 1], gap="medium")
+# Sidebar for background options
+with st.sidebar:
+    st.image("https://flagcdn.com/w320/ht.png", width=80)
+    st.markdown("### GlobalInternet.py")
+    st.markdown("**Founder:** Gesner Deslandes")
+    st.markdown("📞 WhatsApp: (509) 4738-5663")
+    st.markdown("📧 deslandes78@gmail.com")
+    st.markdown("---")
+    bg_option = st.radio("Background", ["Solid color", "Custom image"])
+    if bg_option == "Solid color":
+        bg_color = st.color_picker("Pick a color", "#1a1a2e")
+    else:
+        bg_image_file = st.file_uploader("Upload background image", type=["jpg", "png", "jpeg"])
+        bg_image_path = None
+        if bg_image_file:
+            bg_image_path = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
+            with open(bg_image_path, "wb") as f:
+                f.write(bg_image_file.getbuffer())
 
-with col1:
-    # VIDEO SECTION - UPDATED URL
-    VIDEO_URL = "https://raw.githubusercontent.com/Deslandes1/DeslandesGesner2026/main/Gesner%20Deslandes%20GlobalInternet.py.mp4"
-    st.video(VIDEO_URL)
-    
-    st.markdown('**🔐 Live Demos Password:** `20082010`')
-    st.info("💡 Our Language Suites now feature high-fidelity native neural voices!")
+# Main interface
+uploaded_file = st.file_uploader("Choose a photo (face visible)", type=["jpg", "png", "jpeg"])
+text_to_say = st.text_area("What should the photo say?", height=100, placeholder="Type your message here...")
+mouth_animation = st.checkbox("Enable mouth animation (simple open/close)", value=True)
 
-with col2:
-    st.markdown("### 🏆 Software Demos")
-    
-    # Updated links section
-    st.markdown("""
-    <div class="small-text">
-    🚀 <b>Drone Commander:</b> $2,000<br>
-    🗳️ <b>Online Voting:</b> $2,000<br>
-    🏫 <b>School Management:</b> $1,500<br>
-    🛡️ <b>Security Radar:</b> $299<br><br>
-    🌐 <b>Language Suites ($299 ea):</b><br>
-    🇺🇸 <a href="https://let-s-learn-english-with-gesner-fasbf2hvwsfpkzz9s9oc4f.streamlit.app/" style="color:#48dbfb">Learn English Demo</a><br>
-    🇪🇸 <a href="https://let-s-learn-spanish-with-gesner-twe8na7wraihczvq2lhfkl.streamlit.app/" style="color:#48dbfb">Learn Spanish Demo</a><br>
-    🇵🇹 <a href="https://let-s-learn-portuguese-with-gesner-hqz5b8w8ebgvcrhbtuuxe5.streamlit.app/" style="color:#48dbfb">Learn Portuguese Demo</a>
-    </div>
-    """, unsafe_allow_html=True)
+if st.button("Generate Talking Video", use_container_width=True):
+    if not uploaded_file or not text_to_say.strip():
+        st.warning("Please upload a photo and enter text.")
+    else:
+        with st.spinner("Creating talking video... (this may take a minute)"):
+            # 1. Save uploaded image
+            img_path = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
+            with open(img_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            
+            # 2. Generate speech audio (gTTS – free)
+            audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+            tts = gTTS(text=text_to_say, lang="en", slow=False)
+            tts.save(audio_path)
+            audio = AudioFileClip(audio_path)
+            duration = audio.duration
+            
+            # 3. Create base image clip
+            img = Image.open(img_path).convert("RGBA")
+            # Resize to fit 720p
+            target_w = 720
+            ratio = target_w / img.width
+            new_size = (target_w, int(img.height * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+            img_array = np.array(img)
+            base_clip = ImageClip(img_array, duration=duration)
+            
+            # 4. Background
+            if bg_option == "Solid color":
+                # Convert hex to RGB
+                bg_rgb = tuple(int(bg_color.lstrip("#")[i:i+2], 16) for i in (0, 2, 4))
+                bg_clip = ColorClip(size=(target_w, img_array.shape[0]), color=bg_rgb, duration=duration)
+            else:
+                if bg_image_path and os.path.exists(bg_image_path):
+                    bg_img = Image.open(bg_image_path).convert("RGB")
+                    bg_img = bg_img.resize((target_w, img_array.shape[0]), Image.Resampling.LANCZOS)
+                    bg_clip = ImageClip(np.array(bg_img), duration=duration)
+                else:
+                    # fallback to black
+                    bg_clip = ColorClip(size=(target_w, img_array.shape[0]), color=(0,0,0), duration=duration)
+            
+            # 5. Mouth animation (if enabled) – overlay a red oval that pulses
+            if mouth_animation:
+                # We'll create a mask with a moving mouth (simple open/close)
+                # Use moviepy's `VideoClip` with a custom frame function
+                def make_mouth_frame(t):
+                    # Create a transparent RGBA frame
+                    frame = np.zeros((img_array.shape[0], img_array.shape[1], 4), dtype=np.uint8)
+                    # Mouth region (approximate – adjust coordinates based on face detection? Too complex. Use fixed lower third)
+                    # For simplicity, draw a red ellipse at the bottom center of the face area
+                    # Estimate face region: assume face occupies top 60% of image
+                    face_bottom = int(img_array.shape[0] * 0.65)
+                    mouth_y = face_bottom + 30
+                    mouth_width = int(img_array.shape[1] * 0.3)
+                    mouth_height = int(mouth_width * 0.4)
+                    # Open/close amplitude: sin wave based on time
+                    amplitude = int(mouth_height * (0.5 + 0.5 * np.sin(2 * np.pi * 5 * t)))  # 5 Hz oscillation
+                    mouth_h = max(5, mouth_height + amplitude)
+                    # Draw filled ellipse
+                    overlay = Image.new("RGBA", (img_array.shape[1], img_array.shape[0]), (0,0,0,0))
+                    draw = ImageDraw.Draw(overlay)
+                    left = (img_array.shape[1] - mouth_width) // 2
+                    top = mouth_y - mouth_h//2
+                    right = left + mouth_width
+                    bottom = top + mouth_h
+                    draw.ellipse([left, top, right, bottom], fill=(255, 100, 100, 180))
+                    mouth_frame = np.array(overlay)
+                    # Blend with original frame? Actually we want overlay on top of image
+                    # We'll combine later in composite
+                    return mouth_frame
+                mouth_clip = VideoClip(make_mouth_frame, duration=duration)
+                # Position mouth overlay on the image
+                mouth_clip = mouth_clip.set_position(("center", "center"))
+                # Composite: background + image + mouth
+                video = CompositeVideoClip([bg_clip, base_clip.set_position("center"), mouth_clip], size=(target_w, img_array.shape[0]))
+            else:
+                video = CompositeVideoClip([bg_clip, base_clip.set_position("center")], size=(target_w, img_array.shape[0]))
+            
+            # 6. Add audio
+            video = video.set_audio(audio)
+            
+            # 7. Write video file
+            output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
+            video.write_videofile(output_path, fps=24, codec="libx264", audio_codec="aac", verbose=False, logger=None)
+            
+            # 8. Display download link
+            with open(output_path, "rb") as f:
+                video_bytes = f.read()
+                b64 = base64.b64encode(video_bytes).decode()
+                st.success("Video generated successfully!")
+                st.markdown(f'<a href="data:video/mp4;base64,{b64}" download="talking_photo.mp4"><button style="background-color:#28a745; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer;">⬇️ Download Video</button></a>', unsafe_allow_html=True)
+            
+            # Cleanup
+            for p in [img_path, audio_path, output_path]:
+                if os.path.exists(p):
+                    os.unlink(p)
+            if bg_image_path and os.path.exists(bg_image_path):
+                os.unlink(bg_image_path)
 
-    st.markdown("### 💎 Why Us?")
-    st.markdown("""
-    <div class="small-text">
-    ✅ Full Source Code Included<br>
-    ✅ Zero Subscriptions<br>
-    ✅ 1-Year Free Support
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Contact Card with Website Link
-    st.markdown('<div class="section-box">', unsafe_allow_html=True)
-    st.write("👤 **Gesner Deslandes**")
-    st.write("📞 **WA:** (509) 4738-5663")
-    st.write("📧 deslandes78@gmail.com")
-    st.markdown('🌐 <a class="shining-link" href="https://globalinternetsitepy-abh7v6tnmskxxnuplrdcgk.streamlit.app/" target="_blank">GlobalInternet.py Official Site</a>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    wa_link = "https://wa.me/50947385663?text=Interested%20in%20your%20software%20solutions"
-    st.link_button("🚀 Start WhatsApp", wa_link, use_container_width=True)
+st.markdown("---")
+st.caption("Note: This tool uses a simple mouth animation overlay (not AI lip‑sync). For realistic talking head videos, consider using D‑ID, HeyGen, or Wav2Lip with a GPU.")
