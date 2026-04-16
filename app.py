@@ -11,15 +11,10 @@ import edge_tts
 
 st.set_page_config(page_title="AI Media Studio – GlobalInternet.py", layout="centered")
 
-# Custom CSS to force most text to white, but dropdown options to black, and specific label to black
+# Custom CSS
 st.markdown("""
 <style>
-    /* Main background */
-    .stApp {
-        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-        color: white;
-    }
-    /* All text elements except dropdown options and specific label */
+    .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white; }
     .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
     .stApp label, .stApp .stMarkdown, .stApp .stText, .stApp .stCaption, .stApp .stInfo,
     .stApp .stSuccess, .stApp .stWarning, .stApp .stError, .stApp .stRadio label,
@@ -35,7 +30,6 @@ st.markdown("""
     .stSelectbox label {
         color: black !important;
     }
-    /* Radio button group */
     .stRadio [role="radiogroup"] label {
         background: rgba(255,255,255,0.15);
         border-radius: 10px;
@@ -43,7 +37,6 @@ st.markdown("""
         margin: 0.2rem 0;
         color: white !important;
     }
-    /* Selectbox - main box */
     .stSelectbox div[data-baseweb="select"] {
         background-color: #2d1b4e;
         border: 1px solid #ffcc00;
@@ -55,7 +48,6 @@ st.markdown("""
     .stSelectbox svg {
         fill: white;
     }
-    /* Dropdown menu options - make text black for readability */
     div[data-baseweb="popover"] ul {
         background-color: #f0f2f6 !important;
         border: 1px solid #cccccc;
@@ -67,18 +59,15 @@ st.markdown("""
     div[data-baseweb="popover"] li:hover {
         background-color: #d0d4dc !important;
     }
-    /* Slider */
     .stSlider label, .stSlider div[data-baseweb="slider"] span {
         color: white !important;
     }
-    /* File uploader */
     .stFileUploader {
         background: rgba(255,255,255,0.1);
         border-radius: 15px;
         padding: 0.5rem;
         border: 1px dashed #48dbfb;
     }
-    /* Buttons */
     .stButton button {
         background-color: #ff6b35;
         color: white !important;
@@ -89,7 +78,6 @@ st.markdown("""
         background-color: #feca57;
         color: black !important;
     }
-    /* Sidebar */
     section[data-testid="stSidebar"] {
         background: linear-gradient(135deg, #1a0b2e, #2d1b4e);
     }
@@ -98,12 +86,10 @@ st.markdown("""
     section[data-testid="stSidebar"] label {
         color: white !important;
     }
-    /* Expander */
     .stExpander {
         background: rgba(255,255,255,0.05);
         border-radius: 15px;
     }
-    /* Footer caption */
     .footer-caption {
         text-align: center;
         color: #cccccc !important;
@@ -113,7 +99,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Language settings (only English for simplicity, but you can add others)
 LANGUAGES = {
     "English": {
         "ui": {
@@ -122,6 +107,7 @@ LANGUAGES = {
             "mode_label": "Mode",
             "mode_photo_speech": "📷 Photo + Speech (type text)",
             "mode_photo_audio": "📷 Photo + Uploaded Audio",
+            "mode_photo_music": "📷 Photo + Background Music Only",
             "mode_video_music": "🎥 Video + Background Music",
             "photo_upload": "Choose a photo (face visible)",
             "audio_upload": "Upload your own audio (MP3/WAV)",
@@ -141,13 +127,12 @@ LANGUAGES = {
             "no_music": "None",
             "music_volume": "Music volume",
             "upload_music": "Or upload your own music",
-            "caption": "Supports: Photo + Speech (male voice), Photo + Uploaded Audio, Video + Background Music."
+            "caption": "Supports: Photo + Speech, Photo + Uploaded Audio, Photo + Music Only, Video + Background Music."
         },
         "voice": "en-US-GuyNeural"
     }
 }
 
-# 50 promotional tracks (same as before)
 MUSIC_TRACKS = {
     "None": "",
     "Corporate 1": "https://cdn.pixabay.com/download/audio/2022/02/02/audio_bb7f0c6d9b.mp3",
@@ -219,14 +204,17 @@ tts_voice = LANGUAGES[st.session_state.lang]["voice"]
 st.title(ui["title"])
 st.markdown(ui["subtitle"])
 
-# Mode selection
-mode = st.radio(ui["mode_label"], [ui["mode_photo_speech"], ui["mode_photo_audio"], ui["mode_video_music"]])
+# Mode selection (4 modes)
+mode = st.radio(ui["mode_label"], [
+    ui["mode_photo_speech"],
+    ui["mode_photo_audio"],
+    ui["mode_photo_music"],
+    ui["mode_video_music"]
+])
 
 bg_image_path = None
-bg_clip = None
-target_size = None
 
-# Background settings only for photo modes
+# Background settings only for photo modes (all except video)
 if mode != ui["mode_video_music"]:
     with st.sidebar:
         bg_option = st.radio(ui["bg_label"], [ui["bg_solid"], ui["bg_custom"]])
@@ -239,14 +227,25 @@ if mode != ui["mode_video_music"]:
                 with open(bg_image_path, "wb") as f:
                     f.write(bg_image_file.getbuffer())
 
-# Common music selection
-music_options = list(MUSIC_TRACKS.keys())
-selected_music = st.selectbox(ui["music_label"], music_options, index=0)
+# Common music selection (used only in modes that need background music)
+# For photo+music mode, the selected music will be the main audio.
+selected_music = "None"
 music_volume = 0.5
-if selected_music != "None":
-    music_volume = st.slider(ui["music_volume"], 0.0, 1.0, 0.5, 0.05)
+uploaded_music = None
 
-uploaded_music = st.file_uploader(ui["upload_music"], type=["mp3", "wav"])
+if mode in [ui["mode_photo_music"], ui["mode_video_music"]]:
+    music_options = list(MUSIC_TRACKS.keys())
+    selected_music = st.selectbox(ui["music_label"], music_options, index=0)
+    if selected_music != "None":
+        music_volume = st.slider(ui["music_volume"], 0.0, 1.0, 0.5, 0.05)
+    uploaded_music = st.file_uploader(ui["upload_music"], type=["mp3", "wav"])
+else:
+    # For other modes, we still allow optional background music
+    music_options = list(MUSIC_TRACKS.keys())
+    selected_music = st.selectbox(ui["music_label"], music_options, index=0)
+    if selected_music != "None":
+        music_volume = st.slider(ui["music_volume"], 0.0, 1.0, 0.5, 0.05)
+    uploaded_music = st.file_uploader(ui["upload_music"], type=["mp3", "wav"])
 
 # Mode-specific inputs
 photo_file = None
@@ -260,6 +259,8 @@ if mode == ui["mode_photo_speech"]:
 elif mode == ui["mode_photo_audio"]:
     photo_file = st.file_uploader(ui["photo_upload"], type=["jpg", "png", "jpeg"])
     audio_file = st.file_uploader(ui["audio_upload"], type=["mp3", "wav"])
+elif mode == ui["mode_photo_music"]:
+    photo_file = st.file_uploader(ui["photo_upload"], type=["jpg", "png", "jpeg"])
 else:  # video mode
     video_file = st.file_uploader(ui["video_upload"], type=["mp4"])
 
@@ -270,12 +271,6 @@ async def generate_speech(text, output_path, voice):
     communicate = edge_tts.Communicate(text, voice)
     await communicate.save(output_path)
 
-def get_audio_clip(file_path, duration=None):
-    clip = AudioFileClip(file_path)
-    if duration and clip.duration > duration:
-        clip = clip.subclip(0, duration)
-    return clip
-
 if st.button(ui["generate_btn"], use_container_width=True):
     # Validation
     if mode == ui["mode_photo_speech"] and (not photo_file or not text_to_say.strip()):
@@ -284,15 +279,17 @@ if st.button(ui["generate_btn"], use_container_width=True):
     elif mode == ui["mode_photo_audio"] and (not photo_file or not audio_file):
         st.warning("Please upload a photo and an audio file.")
         st.stop()
+    elif mode == ui["mode_photo_music"] and not photo_file:
+        st.warning("Please upload a photo.")
+        st.stop()
     elif mode == ui["mode_video_music"] and not video_file:
         st.warning("Please upload a video file.")
         st.stop()
 
     with st.spinner(ui["spinner"]):
         try:
-            # Process based on mode
             if mode != ui["mode_video_music"]:
-                # --- Photo mode ---
+                # --- Photo modes ---
                 # Save uploaded photo
                 img_path = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
                 with open(img_path, "wb") as f:
@@ -317,45 +314,67 @@ if st.button(ui["generate_btn"], use_container_width=True):
                     else:
                         bg_clip = ColorClip(size=(target_w, target_h), color=(0,0,0), duration=1)
 
-                # Main audio source
+                # Determine main audio and duration
                 if mode == ui["mode_photo_speech"]:
                     audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                     asyncio.run(generate_speech(text_to_say, audio_path, tts_voice))
                     main_audio = AudioFileClip(audio_path)
-                else:
-                    # Uploaded audio
+                    duration = main_audio.duration
+                    main_audio_file = audio_path
+                elif mode == ui["mode_photo_audio"]:
                     audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                     with open(audio_path, "wb") as f:
                         f.write(audio_file.getbuffer())
                     main_audio = AudioFileClip(audio_path)
+                    duration = main_audio.duration
+                    main_audio_file = audio_path
+                else:  # mode_photo_music
+                    # Use selected music or uploaded music as main audio
+                    if uploaded_music:
+                        audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+                        with open(audio_path, "wb") as f:
+                            f.write(uploaded_music.getbuffer())
+                    elif selected_music != "None":
+                        music_url = MUSIC_TRACKS[selected_music]
+                        audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+                        resp = requests.get(music_url)
+                        with open(audio_path, "wb") as f:
+                            f.write(resp.content)
+                    else:
+                        st.error("Please select or upload a music track.")
+                        st.stop()
+                    main_audio = AudioFileClip(audio_path)
+                    duration = main_audio.duration
+                    main_audio_file = audio_path
 
-                duration = main_audio.duration
                 bg_clip = bg_clip.set_duration(duration)
                 photo_clip = ImageClip(img_array, duration=duration).set_position("center")
                 video = CompositeVideoClip([bg_clip, photo_clip], size=(target_w, target_h))
                 video = video.set_audio(main_audio)
 
-                # Add background music if selected
-                if selected_music != "None" or uploaded_music:
-                    if uploaded_music:
-                        music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
-                        with open(music_path, "wb") as f:
-                            f.write(uploaded_music.getbuffer())
-                    else:
-                        music_url = MUSIC_TRACKS[selected_music]
-                        music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
-                        resp = requests.get(music_url)
-                        with open(music_path, "wb") as f:
-                            f.write(resp.content)
-                    music_clip = AudioFileClip(music_path)
-                    if music_clip.duration < duration:
-                        n_loops = int(duration / music_clip.duration) + 1
-                        music_clip = concatenate_audioclips([music_clip] * n_loops)
-                    music_clip = music_clip.subclip(0, duration).volumex(music_volume)
-                    final_audio = CompositeAudioClip([main_audio, music_clip])
-                    video = video.set_audio(final_audio)
-                    os.unlink(music_path)
-                # else keep main_audio only
+                # For modes that allow additional background music (photo_speech and photo_audio)
+                # but for photo_music, we already set main_audio as the music, so no extra mixing.
+                if mode != ui["mode_photo_music"]:
+                    # Add optional background music
+                    if (selected_music != "None" or uploaded_music) and mode != ui["mode_photo_music"]:
+                        if uploaded_music:
+                            music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+                            with open(music_path, "wb") as f:
+                                f.write(uploaded_music.getbuffer())
+                        else:
+                            music_url = MUSIC_TRACKS[selected_music]
+                            music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+                            resp = requests.get(music_url)
+                            with open(music_path, "wb") as f:
+                                f.write(resp.content)
+                        music_clip = AudioFileClip(music_path)
+                        if music_clip.duration < duration:
+                            n_loops = int(duration / music_clip.duration) + 1
+                            music_clip = concatenate_audioclips([music_clip] * n_loops)
+                        music_clip = music_clip.subclip(0, duration).volumex(music_volume)
+                        final_audio = CompositeAudioClip([main_audio, music_clip])
+                        video = video.set_audio(final_audio)
+                        os.unlink(music_path)
 
                 # Write video
                 output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
@@ -363,7 +382,7 @@ if st.button(ui["generate_btn"], use_container_width=True):
 
                 # Cleanup
                 os.unlink(img_path)
-                os.unlink(audio_path)
+                os.unlink(main_audio_file)
                 if bg_image_path and os.path.exists(bg_image_path):
                     os.unlink(bg_image_path)
 
@@ -375,7 +394,7 @@ if st.button(ui["generate_btn"], use_container_width=True):
                 video_clip = VideoFileClip(video_path_input)
                 duration = video_clip.duration
 
-                # Background music
+                # Add background music
                 if selected_music != "None" or uploaded_music:
                     if uploaded_music:
                         music_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
@@ -392,7 +411,6 @@ if st.button(ui["generate_btn"], use_container_width=True):
                         n_loops = int(duration / music_clip.duration) + 1
                         music_clip = concatenate_audioclips([music_clip] * n_loops)
                     music_clip = music_clip.subclip(0, duration).volumex(music_volume)
-                    # Mix with original video audio
                     orig_audio = video_clip.audio
                     if orig_audio:
                         final_audio = CompositeAudioClip([orig_audio, music_clip])
@@ -400,7 +418,6 @@ if st.button(ui["generate_btn"], use_container_width=True):
                         final_audio = music_clip
                     video_clip = video_clip.set_audio(final_audio)
                     os.unlink(music_path)
-                # else keep original audio
 
                 output_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name
                 video_clip.write_videofile(output_path, codec="libx264", audio_codec="aac", verbose=False, logger=None)
