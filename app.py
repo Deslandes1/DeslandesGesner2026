@@ -11,7 +11,7 @@ import edge_tts
 
 st.set_page_config(page_title="AI Media Studio – GlobalInternet.py", layout="centered")
 
-# Custom CSS to force all text to white
+# Custom CSS to force most text to white, but dropdown options to black
 st.markdown("""
 <style>
     /* Main background */
@@ -19,7 +19,7 @@ st.markdown("""
         background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
         color: white;
     }
-    /* All text elements */
+    /* All text elements except dropdown options */
     .stApp, .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6,
     .stApp label, .stApp .stMarkdown, .stApp .stText, .stApp .stCaption, .stApp .stInfo,
     .stApp .stSuccess, .stApp .stWarning, .stApp .stError, .stApp .stRadio label,
@@ -39,7 +39,7 @@ st.markdown("""
         margin: 0.2rem 0;
         color: white !important;
     }
-    /* Selectbox dropdown */
+    /* Selectbox - main box */
     .stSelectbox div[data-baseweb="select"] {
         background-color: #2d1b4e;
         border: 1px solid #ffcc00;
@@ -50,6 +50,18 @@ st.markdown("""
     }
     .stSelectbox svg {
         fill: white;
+    }
+    /* Dropdown menu options - make text black for readability */
+    div[data-baseweb="popover"] ul {
+        background-color: #f0f2f6 !important;
+        border: 1px solid #cccccc;
+    }
+    div[data-baseweb="popover"] li {
+        color: black !important;
+        background-color: #f0f2f6 !important;
+    }
+    div[data-baseweb="popover"] li:hover {
+        background-color: #d0d4dc !important;
     }
     /* Slider */
     .stSlider label, .stSlider div[data-baseweb="slider"] span {
